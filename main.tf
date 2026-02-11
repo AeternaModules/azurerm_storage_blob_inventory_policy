@@ -1,5 +1,5 @@
-resource "azurerm_storage_blob_inventory_policy" "storage_blob_inventory_policys" {
-  for_each = var.storage_blob_inventory_policys
+resource "azurerm_storage_blob_inventory_policy" "storage_blob_inventory_policies" {
+  for_each = var.storage_blob_inventory_policies
 
   storage_account_id = each.value.storage_account_id
 

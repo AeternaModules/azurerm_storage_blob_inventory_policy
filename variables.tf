@@ -1,6 +1,6 @@
-variable "storage_blob_inventory_policys" {
+variable "storage_blob_inventory_policies" {
   description = <<EOT
-Map of storage_blob_inventory_policys, attributes below
+Map of storage_blob_inventory_policies, attributes below
 Required:
     - storage_account_id
     - rules (block):
@@ -25,9 +25,9 @@ EOT
       filter = optional(object({
         blob_types            = set(string)
         exclude_prefixes      = optional(set(string))
-        include_blob_versions = optional(bool, false)
-        include_deleted       = optional(bool, false)
-        include_snapshots     = optional(bool, false)
+        include_blob_versions = optional(bool) # Default: false
+        include_deleted       = optional(bool) # Default: false
+        include_snapshots     = optional(bool) # Default: false
         prefix_match          = optional(set(string))
       }))
       format                 = string
