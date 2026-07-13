@@ -25,9 +25,9 @@ EOT
       filter = optional(object({
         blob_types            = set(string)
         exclude_prefixes      = optional(set(string))
-        include_blob_versions = optional(bool) # Default: false
-        include_deleted       = optional(bool) # Default: false
-        include_snapshots     = optional(bool) # Default: false
+        include_blob_versions = optional(bool)
+        include_deleted       = optional(bool)
+        include_snapshots     = optional(bool)
         prefix_match          = optional(set(string))
       }))
       format                 = string
@@ -38,10 +38,22 @@ EOT
       storage_container_name = string
     }))
   }))
+  validation {
+    condition = alltrue([
+      for k, v in var.storage_blob_inventory_policies : (
+        length(v.rules) >= 1
+      )
+    ])
+    error_message = "Each rules list must contain at least 1 items"
+  }
   # --- Unconfirmed validation candidates, derived from azurerm_storage_blob_inventory_policy's provider source ---
   # Not auto-enabled: either a bespoke provider validator we can't safely translate,
   # or a path that crosses a list-typed block (needs its own for_each wrapping).
   # Review, translate into a real validation{} block above, and delete once confirmed.
+  # path: storage_account_id
+  #   source:    [from validationFunctionForResourceID] !ok
+  # path: storage_account_id
+  #   source:    [from validationFunctionForResourceID] err != nil
   # path: rules.name
   #   condition: length(value) > 0
   #   message:   must not be empty
