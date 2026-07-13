@@ -46,40 +46,46 @@ EOT
     ])
     error_message = "Each rules list must contain at least 1 items"
   }
-  # --- Unconfirmed validation candidates, derived from azurerm_storage_blob_inventory_policy's provider source ---
-  # Not auto-enabled: either a bespoke provider validator we can't safely translate,
-  # or a path that crosses a list-typed block (needs its own for_each wrapping).
-  # Review, translate into a real validation{} block above, and delete once confirmed.
-  # path: storage_account_id
-  #   source:    [from validationFunctionForResourceID] !ok
-  # path: storage_account_id
-  #   source:    [from validationFunctionForResourceID] err != nil
-  # path: rules.name
-  #   condition: length(value) > 0
-  #   message:   must not be empty
-  # path: rules.storage_container_name
-  #   source:    [from validate.StorageContainerName] !regexp.MustCompile(`^\$root$|^\$web$|^[0-9a-z-]+$`).MatchString(value)
-  # path: rules.storage_container_name
-  #   source:    [from validate.StorageContainerName] len(value) < 3 || len(value) > 63
-  # path: rules.storage_container_name
-  #   source:    [from validate.StorageContainerName] regexp.MustCompile(`^-`).MatchString(value)
-  # path: rules.format
-  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
-  # path: rules.schedule
-  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
-  # path: rules.scope
-  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
-  # path: rules.schema_fields[*]
-  #   condition: length(value) > 0
-  #   message:   must not be empty
-  # path: rules.filter.blob_types[*]
-  #   condition: contains(["blockBlob", "appendBlob", "pageBlob"], value)
-  #   message:   must be one of: blockBlob, appendBlob, pageBlob
-  # path: rules.filter.prefix_match[*]
-  #   condition: length(value) > 0
-  #   message:   must not be empty
-  # path: rules.filter.exclude_prefixes[*]
-  #   condition: length(value) > 0
-  #   message:   must not be empty
+  validation {
+    condition = alltrue([
+      for k, v in var.storage_blob_inventory_policies : (
+        alltrue([for item in v.rules : (length(item.name) > 0)])
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.storage_blob_inventory_policies : (
+        alltrue([for item in v.rules : (alltrue([for x in item.schema_fields : length(x) > 0]))])
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.storage_blob_inventory_policies : (
+        alltrue([for item in v.rules : (item.filter == null || (alltrue([for x in item.filter.blob_types : contains(["blockBlob", "appendBlob", "pageBlob"], x)])))])
+      )
+    ])
+    error_message = "must be one of: blockBlob, appendBlob, pageBlob"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.storage_blob_inventory_policies : (
+        alltrue([for item in v.rules : (item.filter == null || (item.filter.prefix_match == null || (alltrue([for x in item.filter.prefix_match : length(x) > 0]))))])
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.storage_blob_inventory_policies : (
+        alltrue([for item in v.rules : (item.filter == null || (item.filter.exclude_prefixes == null || (alltrue([for x in item.filter.exclude_prefixes : length(x) > 0]))))])
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  # Note: 8 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
 }
 
